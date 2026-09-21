@@ -1,8 +1,8 @@
 window.LYRICS_TIMELINE = [
-    { "start": 19.16, "end": 24.34, "text": "Ah, paso todo el día pensando en vos", "words": [
-        { "start": 19.16, "end": 20.12, "text": "Ah," },
-        { "start": 20.12, "end": 21.08, "text": "paso" }, { "start": 21.08, "end": 21.46, "text": "todo" },
-        { "start": 21.46, "end": 21.84, "text": "el" }, { "start": 21.84, "end": 22.32, "text": "día" },
+    { "start": 17.00, "end": 24.34, "text": "Ah, paso todo el día pensando en vos", "words": [
+        { "start": 17.00, "end": 19.50, "text": "Ah," },
+        { "start": 19.50, "end": 20.80, "text": "paso" }, { "start": 20.80, "end": 21.30, "text": "todo" },
+        { "start": 21.30, "end": 21.75, "text": "el" }, { "start": 21.75, "end": 22.32, "text": "día" },
         { "start": 22.32, "end": 23.42, "text": "pensando" }, { "start": 23.42, "end": 23.88, "text": "en" },
         { "start": 23.88, "end": 24.34, "text": "vos" }
     ] },
