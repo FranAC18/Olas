@@ -70,6 +70,8 @@
     var audioSourceNode = null;
     var beatIntensity = 0; // 0.0 to 1.0 pulse intensity
     var smoothedBass = 0;
+    var bassHistory = [];
+    var beatImpulse = 0;
 
     function initWebAudio() {
         try {
@@ -85,7 +87,7 @@
                 audioSourceNode = audioCtx.createMediaElementSource(audio);
                 analyser = audioCtx.createAnalyser();
                 analyser.fftSize = 256;
-                analyser.smoothingTimeConstant = 0.8;
+                analyser.smoothingTimeConstant = 0.75;
                 dataArray = new Uint8Array(analyser.frequencyBinCount);
 
                 audioSourceNode.connect(analyser);
@@ -98,30 +100,60 @@
 
     function updateBeatAnalysis() {
         var rawBass = 0;
+        var rawMids = 0;
+
         if (analyser && dataArray && isPlaying) {
             analyser.getByteFrequencyData(dataArray);
-            // Low frequencies / kick / bass range: bins 0 to 7 (~20Hz - 180Hz)
-            var sum = 0;
-            var binCount = 8;
-            for (var i = 0; i < binCount; i++) {
-                sum += dataArray[i];
+
+            // Sub-bass & Kick drum: bins 1 to 5 (~25Hz - 110Hz)
+            var bassSum = 0;
+            for (var b = 1; b <= 5; b++) {
+                bassSum += dataArray[b];
             }
-            rawBass = (sum / binCount) / 255;
+            rawBass = (bassSum / 5) / 255;
+
+            // Mids & snare / guitar / vocals accents: bins 6 to 16 (~130Hz - 380Hz)
+            var midSum = 0;
+            for (var m = 6; m <= 16; m++) {
+                midSum += dataArray[m];
+            }
+            rawMids = (midSum / 11) / 255;
         }
 
-        if (rawBass > 0.04) {
-            // Direct audio analysis from Web Audio API
-            smoothedBass += (rawBass - smoothedBass) * 0.35;
-            beatIntensity = Math.min(1, smoothedBass * 1.6);
+        // Bass transient attack / onset detection (kick drum, bass hits & accents)
+        if (rawBass > 0.04 || rawMids > 0.08) {
+            smoothedBass += (rawBass - smoothedBass) * 0.25;
+
+            // Rolling history for dynamic threshold
+            bassHistory.push(rawBass);
+            if (bassHistory.length > 20) bassHistory.shift();
+
+            var avgBass = 0;
+            for (var h = 0; h < bassHistory.length; h++) avgBass += bassHistory[h];
+            avgBass /= bassHistory.length;
+
+            // Trigger accentuation impulse when bass or mid transients strike
+            var isOnset = (rawBass > avgBass * 1.35 + 0.035) || (rawMids > 0.45 && rawBass > 0.12);
+            if (isOnset) {
+                beatImpulse = Math.min(1.0, (rawBass - avgBass) * 3.5 + 0.5);
+            } else {
+                beatImpulse *= 0.82; // Fast decay for crisp transient beats
+            }
+
+            beatIntensity = Math.min(1.0, Math.max(beatImpulse, smoothedBass * 0.5));
         } else if (isPlaying && audio && isFinite(audio.currentTime)) {
-            // Fallback: Rhythmic oscillation calculated by BPM
+            // Fallback: Exact BPM rhythm synchronization with musical accentuations (96 BPM)
             var beatDuration = 60 / CONFIG.BPM; // ~0.625s per beat
             var beatPhase = (audio.currentTime % beatDuration) / beatDuration;
-            // Kick bounce curve: steep peak at start of beat followed by exponential decay
-            var bounce = Math.pow(Math.max(0, 1 - beatPhase * 1.7), 2.6);
-            beatIntensity = bounce * 0.85;
+            var beatIndex = Math.floor(audio.currentTime / beatDuration) % 4;
+
+            // Stronger accent on downbeats (0 and 2), subtle on backbeats (1 and 3)
+            var accentWeight = (beatIndex === 0) ? 1.0 : (beatIndex === 2 ? 0.85 : 0.65);
+            var kickBounce = Math.pow(Math.max(0, 1 - beatPhase * 2.4), 2.2) * accentWeight;
+
+            beatIntensity = kickBounce * 0.85;
         } else {
-            beatIntensity *= 0.88;
+            beatIntensity *= 0.85;
         }
     }
 
@@ -155,7 +187,8 @@
 
         // Choreography / Dancing wave properties
         this.dancePhase = options.dancePhase || 0; // Staggered dance wave
-        this.swayAmp = 18 + Math.random() * 12;
+        this.baseSwayAmp = 2.8 + Math.random() * 1.8; // Drastically reduced base sway: only 2.8px to 4.6px!
+        this.rhythmSensitivity = 0.8 + Math.random() * 0.4;
 
         // Growth & Bloom entrance animation
         this.growth = 0;
@@ -213,17 +246,21 @@
 
         // DANCING BEHAVIOR OR TACTILE DRAG
         if (!this.isDragging) {
-            // Choreographed lateral dance modulated by music beat
-            var tempoFreq = 0.005; // Matches song tempo rhythmically
-            var danceAngle = Math.sin(time * tempoFreq + this.dancePhase);
+            // 1. Gentle, subtle organic breeze (greatly reduced movement: calm & peaceful)
+            var breezeTime = time * 0.0012;
+            var idleBreeze = Math.sin(breezeTime + this.dancePhase) * this.baseSwayAmp;
 
-            // Dance sway amplitude expands with bass beats
-            var dynamicAmp = this.swayAmp * (0.75 + beatIntensity * 0.75);
-            var danceOffset = danceAngle * dynamicAmp;
+            // 2. Rhythmic reaction to beats, bass and musical accentuations
+            // Alternating tilt wave on the beat
+            var beatDirection = Math.sin(this.dancePhase + (time * 0.0045));
+            var rhythmTilt = beatDirection * (beatIntensity * 6.5 * this.rhythmSensitivity);
 
-            // Target head position with dance sway & wind
-            var targetX = this.naturalHeadX + danceOffset + windForce;
-            var targetY = this.naturalHeadY + Math.abs(danceAngle) * 5; // Organic slight dipping
+            // Vertical nod / bounce: slight head dip on kick/bass hit, springs back elastically
+            var rhythmBounce = (beatIntensity * 4.2 * this.rhythmSensitivity);
+
+            // Target head position with reduced sway + rhythm accents + swipe wind
+            var targetX = this.naturalHeadX + idleBreeze + rhythmTilt + windForce;
+            var targetY = this.naturalHeadY + rhythmBounce;
 
             var ax = (targetX - this.x) * this.stiffness;
             var ay = (targetY - this.y) * this.stiffness;
@@ -243,9 +280,9 @@
         var easeGrowth = Math.min(1, Math.sin(g * Math.PI * 0.5));
         var currentRadius = this.radius * easeGrowth;
 
-        // RHYTHMIC BOUNCE / VERTICAL SCALE PULSE (1.0 to 1.06 on beat hits)
+        // RHYTHMIC BOUNCE / VERTICAL SCALE PULSE (subtle 3.5% pulse on beat hits)
         if (isPlaying) {
-            currentRadius *= (1.0 + beatIntensity * 0.06);
+            currentRadius *= (1.0 + beatIntensity * 0.035);
         }
 
         var bx = this.baseX;
