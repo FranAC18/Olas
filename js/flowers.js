@@ -202,6 +202,7 @@
     MusicalFlower.prototype.draw = function (context, time, audioData) {
         if (this.growth <= 0.01) return;
 
+        var isMobile = (window.innerWidth || 1000) < 640;
         audioData = audioData || { volume: 0, bass: 0, mid: 0, treble: 0 };
         var g = this.growth;
         var easeGrowth = Math.min(1, Math.sin(g * Math.PI * 0.5));

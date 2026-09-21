@@ -1146,14 +1146,18 @@
         updateParticles(ctx, delta);
 
         // 5. Actualizar y dibujar flores orgánicas según la música
-        if (typeof window.updateFlowers === 'function' && typeof window.renderFlowers === 'function') {
-            window.updateFlowers(audioData, delta, timestamp, windForce);
-            window.renderFlowers(ctx, timestamp, audioData);
-        } else {
-            for (var i = 0; i < flowers.length; i++) {
-                flowers[i].update(delta, timestamp, windForce);
-                flowers[i].draw(ctx, timestamp);
+        try {
+            if (typeof window.updateFlowers === 'function' && typeof window.renderFlowers === 'function') {
+                window.updateFlowers(audioData, delta, timestamp, windForce);
+                window.renderFlowers(ctx, timestamp, audioData);
+            } else {
+                for (var i = 0; i < flowers.length; i++) {
+                    flowers[i].update(delta, timestamp, windForce);
+                    flowers[i].draw(ctx, timestamp);
+                }
             }
+        } catch (renderError) {
+            console.error('Error rendering flowers frame:', renderError);
         }
 
         animFrameId = requestAnimationFrame(render);
