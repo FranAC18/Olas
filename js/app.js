@@ -7,7 +7,7 @@
 
     var CONFIG = {
         YOUTUBE_URL: 'https://www.youtube.com/watch?v=vlneT-a-KkQ&list=RDvlneT-a-KkQ&start_radio=1',
-        AUDIO_SRC: 'El_Tesoro.mp3',
+        AUDIO_SRC: 'assets/music/El_Tesoro.mp3',
         BPM: 96, // Tempo of "El Tesoro" by El Mató a un Policía Motorizado
         BG_COLOR: '#FDF8F3'
     };
@@ -18,6 +18,8 @@
     // DOM REFERENCES
     // ==========================================
 
+    var catIntroScreen = document.getElementById('cat-intro-screen');
+    var catContinueBtn = document.getElementById('cat-continue-btn');
     var welcomeScreen = document.getElementById('welcome-screen');
     var experienceScreen = document.getElementById('experience-screen');
     var openBtn = document.getElementById('open-btn');
@@ -1198,6 +1200,15 @@
     // EXPERIENCE TRANSITION
     // ==========================================
 
+    function goToWelcomeScreen() {
+        if (catIntroScreen) {
+            catIntroScreen.classList.remove('active');
+        }
+        if (welcomeScreen) {
+            welcomeScreen.classList.add('active');
+        }
+    }
+
     function startExperience() {
         if (animationStarted) return;
         animationStarted = true;
@@ -1250,6 +1261,9 @@
     // ==========================================
 
     function bindEvents() {
+        if (catContinueBtn) {
+            catContinueBtn.addEventListener('click', goToWelcomeScreen);
+        }
         openBtn.addEventListener('click', startExperience);
 
         audioToggle.addEventListener('click', togglePlay);

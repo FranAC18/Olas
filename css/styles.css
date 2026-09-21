@@ -53,6 +53,89 @@ body {
 }
 
 /* ========================
+   CAT INTRO SCREEN ("HOLA RUNITA")
+   ======================== */
+
+.cat-intro-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    position: relative;
+    z-index: 2;
+    padding: 2rem 1.5rem;
+    max-width: 440px;
+    width: 90%;
+}
+
+.cat-dialogue-bubble {
+    position: relative;
+    background: rgba(255, 255, 255, 0.92);
+    border: 2px solid rgba(212, 165, 116, 0.5);
+    border-radius: 999px;
+    padding: 10px 28px;
+    box-shadow: 0 10px 30px rgba(180, 120, 60, 0.16);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    margin-bottom: 20px;
+    animation: bubbleFloat 3s ease-in-out infinite, fadeSlideUp 0.8s ease forwards;
+}
+
+.cat-dialogue-bubble .bubble-text {
+    font-family: var(--font-lyrics);
+    font-size: clamp(1.25rem, 4.5vw, 1.65rem);
+    font-weight: 800;
+    color: #92400e;
+    letter-spacing: -0.01em;
+    display: block;
+    user-select: none;
+}
+
+.cat-dialogue-bubble .bubble-tail {
+    position: absolute;
+    bottom: -11px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 11px solid transparent;
+    border-right: 11px solid transparent;
+    border-top: 11px solid rgba(255, 255, 255, 0.95);
+    filter: drop-shadow(0 2px 2px rgba(180, 120, 60, 0.2));
+}
+
+.cat-gif-wrapper {
+    width: min(250px, 64vw);
+    height: auto;
+    margin-bottom: 26px;
+    border-radius: 28px;
+    overflow: hidden;
+    box-shadow: 0 16px 40px rgba(180, 120, 60, 0.18);
+    border: 3px solid rgba(255, 255, 255, 0.95);
+    background: rgba(255, 255, 255, 0.6);
+    animation: fadeSlideUp 1s ease forwards;
+    animation-delay: 0.25s;
+    opacity: 0;
+}
+
+.cat-saluda-gif {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 25px;
+}
+
+.cat-continue-btn {
+    animation-delay: 0.5s;
+}
+
+@keyframes bubbleFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-7px); }
+}
+
+/* ========================
    WELCOME SCREEN
    ======================== */
 

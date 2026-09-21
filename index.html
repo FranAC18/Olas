@@ -11,7 +11,30 @@
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <div id="welcome-screen" class="screen active">
+    <!-- Cat Intro Screen ("hola runita") -->
+    <div id="cat-intro-screen" class="screen active">
+        <div class="cat-intro-content">
+            <div class="petal petal-1" aria-hidden="true"></div>
+            <div class="petal petal-2" aria-hidden="true"></div>
+            <div class="petal petal-3" aria-hidden="true"></div>
+            <div class="petal petal-4" aria-hidden="true"></div>
+
+            <div class="cat-dialogue-bubble">
+                <span class="bubble-text">hola runita</span>
+                <span class="bubble-tail"></span>
+            </div>
+
+            <div class="cat-gif-wrapper">
+                <img src="assets/images/gato saluda.gif" alt="Gato saludando" class="cat-saluda-gif">
+            </div>
+
+            <button id="cat-continue-btn" class="open-button cat-continue-btn" aria-label="Continuar">
+                <span>Continuar 🐾</span>
+            </button>
+        </div>
+    </div>
+
+    <div id="welcome-screen" class="screen">
         <div class="welcome-content">
             <div class="petal petal-1" aria-hidden="true"></div>
             <div class="petal petal-2" aria-hidden="true"></div>
