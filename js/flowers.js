@@ -140,7 +140,11 @@
         if (this.isDragging) return;
 
         audioData = audioData || { volume: 0, bass: 0, mid: 0, treble: 0 };
-        var intensity = animationIntensity;
+
+        // Detección de viewport móvil para amplificar dinámicamente el movimiento en pantallas pequeñas
+        var isMobile = (window.innerWidth || 1000) < 640;
+        var mobileMultiplier = isMobile ? 1.55 : 1.0;
+        var intensity = animationIntensity * mobileMultiplier;
 
         var bassVal = (audioData.bass || 0) * this.bassResponse * intensity;
         var midVal = (audioData.mid || 0) * this.midResponse * intensity;
@@ -148,39 +152,38 @@
         var volVal = (audioData.volume || 0) * intensity;
 
         // =================================================================
-        // 1. MOVIMIENTO SUAVE Y ELEGANTE DEL TALLO (Breeze + Bass + Speed)
+        // 1. MOVIMIENTO ORGÁNICO DEL TALLO (Breeze + Bass + Speed)
         // =================================================================
-        // Brisa base lenta, natural y romántica
         var baseBreezeTime = time * 0.001 * this.speed + this.phase;
-        var naturalSway = Math.sin(baseBreezeTime) * (3.0 + 5.0 * volVal);
+        var naturalSway = Math.sin(baseBreezeTime) * (isMobile ? (5.0 + 9.0 * volVal) : (3.0 + 5.0 * volVal));
 
-        // Oscilación orgánica modulada por los bajos y compás musical
-        var musicalSway = Math.sin(time * 0.0035 * this.speed + this.phase) * (this.swayAmount * bassVal);
+        // Oscilación musical marcada y rítmica con los golpes de bajo
+        var musicalSway = Math.sin(time * (isMobile ? 0.0042 : 0.0035) * this.speed + this.phase) * (this.swayAmount * bassVal);
 
         // Desplazamiento lateral objetivo
         var targetX = this.naturalHeadX + naturalSway + musicalSway + (windForce || 0) * 0.4;
 
         // =================================================================
-        // 2. ELEVACIÓN Y CABECEO RÍTMICO VERTICAL (Bass Hits)
+        // 2. ELEVACIÓN Y CABECEO RÍTMICO VERTICAL (Bass Hits & Accents)
         // =================================================================
-        // En los golpes de música el tallo se arquea y baila verticalmente
-        var verticalDance = -Math.sin(baseBreezeTime * 1.4) * (2.5 + 4.0 * volVal) - (bassVal * this.verticalLift);
+        // Rebote y flexión elástica bien visible y expresiva en móvil
+        var verticalDance = -Math.sin(baseBreezeTime * 1.5) * (isMobile ? 5.0 : 2.5) - (bassVal * this.verticalLift);
         var targetY = this.naturalHeadY + verticalDance;
 
         // =================================================================
-        // 3. INCLINACIÓN (Tilt / Rotation)
+        // 3. INCLINACIÓN DE CABEZA (Tilt / Rotation - Acentuado al ritmo)
         // =================================================================
-        var targetTilt = Math.sin(baseBreezeTime + 0.5) * (this.rotationAmount * (0.4 + 0.8 * bassVal));
-        this.currentTilt += (targetTilt - this.currentTilt) * 0.15;
+        var targetTilt = Math.sin(time * (isMobile ? 0.0038 : 0.003) * this.speed + this.phase) * (this.rotationAmount * (0.6 + 1.3 * bassVal));
+        this.currentTilt += (targetTilt - this.currentTilt) * (isMobile ? 0.22 : 0.15);
 
         // =================================================================
         // 4. RESPIRACIÓN DE PÉTALOS Y ESCALA (Mid & Volume)
         // =================================================================
-        var targetScale = 1.0 + (volVal * this.scaleAmount) + (midVal * 0.035);
-        this.currentScaleMod += (targetScale - this.currentScaleMod) * 0.2;
+        var targetScale = 1.0 + (volVal * this.scaleAmount) + (midVal * (isMobile ? 0.06 : 0.035));
+        this.currentScaleMod += (targetScale - this.currentScaleMod) * (isMobile ? 0.25 : 0.20);
 
         // Micro-ondulación en los pétalos por agudos
-        this.petalFlutter = Math.sin(time * 0.012 + this.phase) * (trebleVal * 0.06);
+        this.petalFlutter = Math.sin(time * 0.014 + this.phase) * (trebleVal * (isMobile ? 0.12 : 0.06));
 
         // FÍSICA DE RESORTE AMORTIGUADO (Spring-damper para máxima suavidad)
         var ax = (targetX - this.x) * this.stiffness;
@@ -260,7 +263,7 @@
             var tangentAngle = Math.atan2(dty, dtx);
 
             // Reacción sutil de las hojas a frecuencias medias
-            var leafMidWobble = Math.sin(time * 0.003 + this.phase + l) * (0.05 + 0.12 * (audioData.mid || 0));
+            var leafMidWobble = Math.sin(time * 0.0035 + this.phase + l) * (isMobile ? (0.10 + 0.25 * (audioData.mid || 0)) : (0.05 + 0.12 * (audioData.mid || 0)));
             var leafAngle = tangentAngle + (leaf.side * (Math.PI * 0.36) + leaf.angleOffset) + leafMidWobble;
             var leafLen = leaf.length * easeGrowth;
             var leafWid = leaf.width * easeGrowth;
@@ -295,8 +298,8 @@
         context.translate(hx, hy);
 
         // Giro armónico siguiendo la tangente del tallo más el tilt musical
-        var headAngle = Math.atan2(hy - cp2y, hx - cp2x) - Math.PI / 2 + this.currentTilt;
-        context.rotate(headAngle * 0.45);
+        var headAngle = Math.atan2(hy - cp2y, hx - cp2x) - Math.PI / 2 + this.currentTilt * (isMobile ? 1.35 : 1.0);
+        context.rotate(headAngle * (isMobile ? 0.58 : 0.45));
 
         // Halo luminoso cálido (reacciona al volumen y presencia)
         var glow = context.createRadialGradient(0, 0, currentRadius * 0.35, 0, 0, currentRadius * 1.35);
@@ -486,25 +489,25 @@
     function buildFlowerGarden(width, height) {
         gardenFlowers = [];
         var isMobile = width < 640;
-        var count = isMobile ? 5 : 6;
-        var baseMargin = width * 0.08;
+        var count = isMobile ? 3 : 6; // 3 flores majestuosas y bien espaciadas en móvil, 6 en PC
+        var baseMargin = isMobile ? (width * 0.16) : (width * 0.08);
         var usableWidth = width - baseMargin * 2;
         var spacing = count > 1 ? usableWidth / (count - 1) : 0;
 
         for (var i = 0; i < count; i++) {
             var norm = count > 1 ? i / (count - 1) : 0.5;
-            var baseX = baseMargin + i * spacing + (Math.random() - 0.5) * (isMobile ? 16 : 28);
+            var baseX = baseMargin + i * spacing + (Math.random() - 0.5) * (isMobile ? 10 : 28);
             var baseY = height + 15;
 
-            var heightVariation = Math.sin(norm * Math.PI) * 0.08;
-            var baseHeightFrac = isMobile ? 0.68 : 0.62;
-            var headY = height * (baseHeightFrac - heightVariation) + (Math.random() - 0.5) * (height * 0.06);
-            var radius = isMobile ? (38 + Math.random() * 12) : (50 + Math.random() * 16);
+            var centerElev = isMobile ? Math.sin(norm * Math.PI) * 0.07 : Math.sin(norm * Math.PI) * 0.08;
+            var baseHeightFrac = isMobile ? 0.58 : 0.62;
+            var headY = height * (baseHeightFrac - centerElev) + (Math.random() - 0.5) * (height * 0.04);
+            var radius = isMobile ? (46 + Math.random() * 8) : (50 + Math.random() * 16);
 
-            var fanOffset = (norm - 0.5) * (isMobile ? 24 : 44);
-            var headX = baseX + fanOffset + (Math.random() - 0.5) * 16;
+            var fanOffset = (norm - 0.5) * (isMobile ? 20 : 44);
+            var headX = baseX + fanOffset;
 
-            var bloomDelay = 200 + i * 220;
+            var bloomDelay = isMobile ? (150 + i * 180) : (200 + i * 220);
 
             gardenFlowers.push(new MusicalFlower({
                 baseX: baseX,
@@ -513,10 +516,16 @@
                 headY: headY,
                 radius: radius,
                 bloomDelay: bloomDelay,
-                phase: i * 0.95 + Math.random() * 0.4,
-                speed: 0.8 + Math.random() * 0.4,
-                sensitivity: 0.85 + Math.random() * 0.35,
-                naturalCurve: (norm - 0.5) * 25
+                phase: i * 1.35 + Math.random() * 0.3,
+                speed: isMobile ? (1.05 + Math.random() * 0.35) : (0.8 + Math.random() * 0.4),
+                sensitivity: isMobile ? (1.45 + Math.random() * 0.35) : (0.85 + Math.random() * 0.35),
+                swayAmount: isMobile ? (36 + Math.random() * 16) : (16 + Math.random() * 12),
+                verticalLift: isMobile ? (56 + Math.random() * 20) : (30 + Math.random() * 18),
+                rotationAmount: isMobile ? (0.24 + Math.random() * 0.08) : (0.09 + Math.random() * 0.06),
+                scaleAmount: isMobile ? (0.12 + Math.random() * 0.04) : (0.05 + Math.random() * 0.03),
+                stiffness: isMobile ? (0.070 + Math.random() * 0.015) : (0.052 + Math.random() * 0.018),
+                damping: isMobile ? (0.83 + Math.random() * 0.03) : (0.86 + Math.random() * 0.04),
+                naturalCurve: (norm - 0.5) * (isMobile ? 26 : 25)
             }));
         }
 
@@ -528,7 +537,7 @@
      */
     function plantNewFlower(x, y, width, height) {
         var isMobile = width < 640;
-        var radius = isMobile ? (46 + Math.random() * 14) : (58 + Math.random() * 18);
+        var radius = isMobile ? (46 + Math.random() * 12) : (58 + Math.random() * 18);
 
         var newFlower = new MusicalFlower({
             baseX: x + (Math.random() - 0.5) * 35,
@@ -538,8 +547,14 @@
             radius: radius,
             bloomDelay: 0,
             phase: gardenFlowers.length * 0.95,
-            speed: 0.85 + Math.random() * 0.35,
-            sensitivity: 0.9 + Math.random() * 0.3,
+            speed: isMobile ? (1.05 + Math.random() * 0.35) : (0.85 + Math.random() * 0.35),
+            sensitivity: isMobile ? (1.45 + Math.random() * 0.3) : (0.9 + Math.random() * 0.3),
+            swayAmount: isMobile ? (36 + Math.random() * 16) : (16 + Math.random() * 12),
+            verticalLift: isMobile ? (56 + Math.random() * 20) : (30 + Math.random() * 18),
+            rotationAmount: isMobile ? (0.24 + Math.random() * 0.08) : (0.09 + Math.random() * 0.06),
+            scaleAmount: isMobile ? (0.12 + Math.random() * 0.04) : (0.05 + Math.random() * 0.03),
+            stiffness: isMobile ? (0.070 + Math.random() * 0.015) : (0.052 + Math.random() * 0.018),
+            damping: isMobile ? (0.83 + Math.random() * 0.03) : (0.86 + Math.random() * 0.04),
             naturalCurve: (Math.random() - 0.5) * 20
         });
 

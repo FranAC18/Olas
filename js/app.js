@@ -1085,6 +1085,8 @@
     // CANVAS SIZING
     // ==========================================
 
+    var prevWasMobile = null;
+
     function resizeCanvas() {
         width = window.innerWidth;
         height = window.innerHeight;
@@ -1097,8 +1099,14 @@
 
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-        for (var i = 0; i < flowers.length; i++) {
-            flowers[i].baseY = height + 15;
+        var isMobile = width < 640;
+        if (animationStarted && (prevWasMobile !== isMobile || flowers.length === 0)) {
+            prevWasMobile = isMobile;
+            buildFlowerGarden();
+        } else {
+            for (var i = 0; i < flowers.length; i++) {
+                flowers[i].baseY = height + 15;
+            }
         }
     }
 
