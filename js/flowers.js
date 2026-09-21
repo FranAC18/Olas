@@ -152,38 +152,40 @@
         var volVal = (audioData.volume || 0) * intensity;
 
         // =================================================================
-        // 1. MOVIMIENTO ORGÁNICO DEL TALLO (Breeze + Bass + Speed)
+        // 1. MOVIMIENTO LATERAL CALMADO Y SUAVE (Sin carreras de un lado a otro)
         // =================================================================
-        var baseBreezeTime = time * 0.001 * this.speed + this.phase;
-        var naturalSway = Math.sin(baseBreezeTime) * (isMobile ? (5.0 + 9.0 * volVal) : (3.0 + 5.0 * volVal));
+        // Frecuencia lenta y majestuosa (~4 a 5 segundos por ciclo de vaivén)
+        var swayFreq = isMobile ? 0.0011 : 0.0014;
+        var baseBreezeTime = time * 0.0008 * this.speed + this.phase;
+        var naturalSway = Math.sin(baseBreezeTime) * (isMobile ? 3.0 : 4.0);
 
-        // Oscilación musical marcada y rítmica con los golpes de bajo
-        var musicalSway = Math.sin(time * (isMobile ? 0.0042 : 0.0035) * this.speed + this.phase) * (this.swayAmount * bassVal);
+        // Oscilación musical tranquila que no sacude las flores de lado a lado
+        var musicalSway = Math.sin(time * swayFreq * this.speed + this.phase) * (this.swayAmount * (0.35 + 0.65 * bassVal));
 
-        // Desplazamiento lateral objetivo
-        var targetX = this.naturalHeadX + naturalSway + musicalSway + (windForce || 0) * 0.4;
+        // Desplazamiento lateral objetivo moderado y elegante
+        var targetX = this.naturalHeadX + naturalSway + musicalSway + (windForce || 0) * 0.3;
 
         // =================================================================
-        // 2. ELEVACIÓN Y CABECEO RÍTMICO VERTICAL (Bass Hits & Accents)
+        // 2. ELEVACIÓN Y CABECEO RÍTMICO VERTICAL (Arriba hacia abajo con la música)
         // =================================================================
-        // Rebote y flexión elástica bien visible y expresiva en móvil
-        var verticalDance = -Math.sin(baseBreezeTime * 1.5) * (isMobile ? 5.0 : 2.5) - (bassVal * this.verticalLift);
+        // El ritmo se expresa verticalmente: rebote suave y elástico en los bajos
+        var verticalDance = -Math.sin(baseBreezeTime * 1.6) * 3.0 - (bassVal * this.verticalLift);
         var targetY = this.naturalHeadY + verticalDance;
 
         // =================================================================
-        // 3. INCLINACIÓN DE CABEZA (Tilt / Rotation - Acentuado al ritmo)
+        // 3. INCLINACIÓN DE CABEZA (Tilt / Cabeceo rítmico suave)
         // =================================================================
-        var targetTilt = Math.sin(time * (isMobile ? 0.0038 : 0.003) * this.speed + this.phase) * (this.rotationAmount * (0.6 + 1.3 * bassVal));
-        this.currentTilt += (targetTilt - this.currentTilt) * (isMobile ? 0.22 : 0.15);
+        var targetTilt = Math.sin(time * (isMobile ? 0.0016 : 0.002) * this.speed + this.phase) * (this.rotationAmount * (0.4 + 0.8 * bassVal));
+        this.currentTilt += (targetTilt - this.currentTilt) * 0.16;
 
         // =================================================================
         // 4. RESPIRACIÓN DE PÉTALOS Y ESCALA (Mid & Volume)
         // =================================================================
-        var targetScale = 1.0 + (volVal * this.scaleAmount) + (midVal * (isMobile ? 0.06 : 0.035));
-        this.currentScaleMod += (targetScale - this.currentScaleMod) * (isMobile ? 0.25 : 0.20);
+        var targetScale = 1.0 + (volVal * this.scaleAmount) + (midVal * (isMobile ? 0.045 : 0.035));
+        this.currentScaleMod += (targetScale - this.currentScaleMod) * 0.18;
 
-        // Micro-ondulación en los pétalos por agudos
-        this.petalFlutter = Math.sin(time * 0.014 + this.phase) * (trebleVal * (isMobile ? 0.12 : 0.06));
+        // Micro-ondulación delicada en los pétalos por agudos
+        this.petalFlutter = Math.sin(time * 0.010 + this.phase) * (trebleVal * (isMobile ? 0.08 : 0.06));
 
         // FÍSICA DE RESORTE AMORTIGUADO (Spring-damper para máxima suavidad)
         var ax = (targetX - this.x) * this.stiffness;
@@ -518,15 +520,15 @@
                 radius: radius,
                 bloomDelay: bloomDelay,
                 phase: i * 1.35 + Math.random() * 0.3,
-                speed: isMobile ? (1.05 + Math.random() * 0.35) : (0.8 + Math.random() * 0.4),
-                sensitivity: isMobile ? (1.45 + Math.random() * 0.35) : (0.85 + Math.random() * 0.35),
-                swayAmount: isMobile ? (36 + Math.random() * 16) : (16 + Math.random() * 12),
-                verticalLift: isMobile ? (56 + Math.random() * 20) : (30 + Math.random() * 18),
-                rotationAmount: isMobile ? (0.24 + Math.random() * 0.08) : (0.09 + Math.random() * 0.06),
-                scaleAmount: isMobile ? (0.12 + Math.random() * 0.04) : (0.05 + Math.random() * 0.03),
-                stiffness: isMobile ? (0.070 + Math.random() * 0.015) : (0.052 + Math.random() * 0.018),
-                damping: isMobile ? (0.83 + Math.random() * 0.03) : (0.86 + Math.random() * 0.04),
-                naturalCurve: (norm - 0.5) * (isMobile ? 26 : 25)
+                speed: isMobile ? (0.85 + Math.random() * 0.25) : (0.8 + Math.random() * 0.3),
+                sensitivity: isMobile ? (1.20 + Math.random() * 0.25) : (0.85 + Math.random() * 0.35),
+                swayAmount: isMobile ? (9 + Math.random() * 6) : (14 + Math.random() * 8), // Lateral calmado
+                verticalLift: isMobile ? (42 + Math.random() * 16) : (30 + Math.random() * 16), // Rebote vertical
+                rotationAmount: isMobile ? (0.13 + Math.random() * 0.06) : (0.09 + Math.random() * 0.05),
+                scaleAmount: isMobile ? (0.08 + Math.random() * 0.03) : (0.05 + Math.random() * 0.03),
+                stiffness: isMobile ? (0.054 + Math.random() * 0.012) : (0.052 + Math.random() * 0.015),
+                damping: isMobile ? (0.87 + Math.random() * 0.03) : (0.86 + Math.random() * 0.04),
+                naturalCurve: (norm - 0.5) * (isMobile ? 22 : 25)
             }));
         }
 
@@ -548,14 +550,14 @@
             radius: radius,
             bloomDelay: 0,
             phase: gardenFlowers.length * 0.95,
-            speed: isMobile ? (1.05 + Math.random() * 0.35) : (0.85 + Math.random() * 0.35),
-            sensitivity: isMobile ? (1.45 + Math.random() * 0.3) : (0.9 + Math.random() * 0.3),
-            swayAmount: isMobile ? (36 + Math.random() * 16) : (16 + Math.random() * 12),
-            verticalLift: isMobile ? (56 + Math.random() * 20) : (30 + Math.random() * 18),
-            rotationAmount: isMobile ? (0.24 + Math.random() * 0.08) : (0.09 + Math.random() * 0.06),
-            scaleAmount: isMobile ? (0.12 + Math.random() * 0.04) : (0.05 + Math.random() * 0.03),
-            stiffness: isMobile ? (0.070 + Math.random() * 0.015) : (0.052 + Math.random() * 0.018),
-            damping: isMobile ? (0.83 + Math.random() * 0.03) : (0.86 + Math.random() * 0.04),
+            speed: isMobile ? (0.85 + Math.random() * 0.25) : (0.85 + Math.random() * 0.3),
+            sensitivity: isMobile ? (1.20 + Math.random() * 0.25) : (0.9 + Math.random() * 0.3),
+            swayAmount: isMobile ? (9 + Math.random() * 6) : (14 + Math.random() * 8),
+            verticalLift: isMobile ? (42 + Math.random() * 16) : (30 + Math.random() * 16),
+            rotationAmount: isMobile ? (0.13 + Math.random() * 0.06) : (0.09 + Math.random() * 0.05),
+            scaleAmount: isMobile ? (0.08 + Math.random() * 0.03) : (0.05 + Math.random() * 0.03),
+            stiffness: isMobile ? (0.054 + Math.random() * 0.012) : (0.052 + Math.random() * 0.015),
+            damping: isMobile ? (0.87 + Math.random() * 0.03) : (0.86 + Math.random() * 0.04),
             naturalCurve: (Math.random() - 0.5) * 20
         });
 
