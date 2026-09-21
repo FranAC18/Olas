@@ -74,6 +74,12 @@
     var beatImpulse = 0;
 
     function initWebAudio() {
+        // Si ya disponemos de AudioManager (con audio_data.json y fallback procedural),
+        // no enlazamos createMediaElementSource para evitar el bug de búfer cíclico / disco rayado en navegadores móviles
+        if (window.audioManager) {
+            return;
+        }
+
         try {
             var AudioContextClass = window.AudioContext || window.webkitAudioContext;
             if (!AudioContextClass) return;
@@ -81,7 +87,7 @@
                 audioCtx = new AudioContextClass();
             }
             if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
+                audioCtx.resume().catch(function () {});
             }
             if (!audioSourceNode && audio) {
                 audioSourceNode = audioCtx.createMediaElementSource(audio);
@@ -968,13 +974,20 @@
             isPlaying = true;
             updateAudioIcons();
             startPetalFall();
-            initWebAudio();
+            if (audioCtx && typeof audioCtx.resume === 'function' && audioCtx.state === 'suspended') {
+                audioCtx.resume().catch(function () {});
+            } else if (!window.audioManager) {
+                initWebAudio();
+            }
         });
 
         audio.addEventListener('pause', function () {
             isPlaying = false;
             updateAudioIcons();
             stopPetalFall();
+            if (audioCtx && typeof audioCtx.suspend === 'function' && audioCtx.state === 'running') {
+                audioCtx.suspend().catch(function () {});
+            }
         });
 
         audio.addEventListener('timeupdate', function () {
@@ -1006,8 +1019,15 @@
         if (!audio) return;
         if (isPlaying) {
             audio.pause();
+            if (audioCtx && typeof audioCtx.suspend === 'function' && audioCtx.state === 'running') {
+                audioCtx.suspend().catch(function () {});
+            }
         } else {
-            initWebAudio();
+            if (audioCtx && typeof audioCtx.resume === 'function' && audioCtx.state === 'suspended') {
+                audioCtx.resume().catch(function () {});
+            } else if (!window.audioManager) {
+                initWebAudio();
+            }
             audio.play().catch(function (e) {
                 console.warn('Playback bloqueado:', e);
             });
@@ -1333,7 +1353,9 @@
         welcomeScreen.classList.remove('active');
         experienceScreen.classList.add('active');
 
-        initWebAudio();
+        if (!window.audioManager) {
+            initWebAudio();
+        }
         if (audio) {
             audio.play().catch(function (e) {
                 console.warn('Autoplay bloqueado. Usa el botón en la barra:', e);
