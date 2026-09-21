@@ -30,6 +30,7 @@
     var lyricsPanel = document.getElementById('lyrics-panel');
     var lyricsLine = document.getElementById('lyrics-line');
     var lyricsStatus = document.getElementById('lyrics-status');
+    var petalLayer = document.getElementById('petal-layer');
 
     // ========================
     // STATE
@@ -42,6 +43,7 @@
     var animationStarted = false;
     var flowerAnimationFrame = null;
     var renderedRegionCount = 1;
+    var petalTimer = null;
 
     // Tiempos absolutos en segundos. Los dos primeros fueron fijados con las
     // marcas proporcionadas: 0:17-0:19 y 0:20-0:24.
@@ -305,13 +307,43 @@
     function startFlowerMotion() {
         if (flowerAnimationFrame) cancelAnimationFrame(flowerAnimationFrame);
         flowerAnimationFrame = requestAnimationFrame(renderFlowersForAudio);
+        startPetalFall();
         canvas.classList.add('is-playing');
     }
 
     function stopFlowerMotion() {
         if (flowerAnimationFrame) cancelAnimationFrame(flowerAnimationFrame);
         flowerAnimationFrame = null;
+        stopPetalFall();
         canvas.classList.remove('is-playing');
+    }
+
+    function createFallingPetal() {
+        if (!petalLayer) return;
+
+        var petal = document.createElement('span');
+        petal.className = 'falling-petal';
+        petal.style.setProperty('--x', (Math.random() * 100).toFixed(2) + 'vw');
+        petal.style.setProperty('--drift', ((Math.random() - 0.5) * 180).toFixed(0) + 'px');
+        petal.style.setProperty('--duration', (7 + Math.random() * 7).toFixed(2) + 's');
+        petal.style.setProperty('--delay', (Math.random() * 0.8).toFixed(2) + 's');
+        petal.style.setProperty('--scale', (0.55 + Math.random() * 0.8).toFixed(2));
+        petalLayer.appendChild(petal);
+        petal.addEventListener('animationend', function () {
+            petal.remove();
+        });
+    }
+
+    function startPetalFall() {
+        if (petalTimer) return;
+        for (var i = 0; i < 8; i++) createFallingPetal();
+        petalTimer = setInterval(createFallingPetal, 850);
+    }
+
+    function stopPetalFall() {
+        if (!petalTimer) return;
+        clearInterval(petalTimer);
+        petalTimer = null;
     }
 
     // ========================
@@ -363,7 +395,7 @@
         renderedRegionCount = 1;
         blitBuffer();
         onFlowersComplete();
-        startFlowerMotion();
+        if (isPlaying) startFlowerMotion();
     }
 
     // ========================

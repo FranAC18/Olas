@@ -178,7 +178,99 @@ body {
 #experience-screen {
     background-color: var(--color-bg);
     flex-direction: column;
+    isolation: isolate;
+    overflow: hidden;
 }
+
+#experience-screen::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at 50% 48%, rgba(255, 229, 137, 0.18), transparent 28%),
+        radial-gradient(circle at 8% 82%, rgba(212, 165, 116, 0.12), transparent 24%),
+        radial-gradient(circle at 94% 20%, rgba(238, 199, 103, 0.1), transparent 24%);
+    pointer-events: none;
+    z-index: -3;
+}
+
+#petal-layer {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.falling-petal {
+    position: absolute;
+    top: -8vh;
+    left: var(--x);
+    width: 11px;
+    height: 20px;
+    border-radius: 80% 12% 80% 12%;
+    background: linear-gradient(145deg, rgba(247, 207, 84, 0.82), rgba(205, 153, 52, 0.48));
+    box-shadow: 0 2px 8px rgba(190, 137, 40, 0.14);
+    opacity: 0;
+    transform: rotate(25deg) scale(var(--scale));
+    animation: fallingPetal var(--duration) linear var(--delay) forwards;
+}
+
+.flower-garden {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: -1;
+}
+
+.garden-flower {
+    --flower-scale: 1;
+    position: absolute;
+    width: 82px;
+    height: 82px;
+    opacity: 0.42;
+    transform: scale(var(--flower-scale));
+    filter: drop-shadow(0 8px 12px rgba(170, 123, 40, 0.12));
+}
+
+.garden-flower i {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 27px;
+    height: 50px;
+    border-radius: 70% 18% 70% 18%;
+    background: linear-gradient(150deg, #f7d968, #dca947);
+    transform-origin: 50% 100%;
+}
+
+.garden-flower i:nth-child(1) { transform: translate(-50%, -100%) rotate(0deg); }
+.garden-flower i:nth-child(2) { transform: translate(-50%, -100%) rotate(60deg); }
+.garden-flower i:nth-child(3) { transform: translate(-50%, -100%) rotate(120deg); }
+.garden-flower i:nth-child(4) { transform: translate(-50%, -100%) rotate(180deg); }
+.garden-flower i:nth-child(5) { transform: translate(-50%, -100%) rotate(240deg); }
+.garden-flower i:nth-child(6) { transform: translate(-50%, -100%) rotate(300deg); }
+
+.garden-flower b {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 27px;
+    height: 27px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 32%, #9d6c32 0 12%, #684629 52%, #493322 100%);
+    transform: translate(-50%, -50%);
+    box-shadow: inset 0 2px 4px rgba(255, 226, 126, 0.2);
+}
+
+.garden-flower-left { left: 5vw; top: 28%; --flower-scale: 0.8; }
+.garden-flower-right { right: 5vw; top: 63%; --flower-scale: 0.72; }
+.garden-flower-top { right: 22%; top: 8%; --flower-scale: 0.5; opacity: 0.25; }
+.garden-flower-bottom { left: 20%; bottom: 8%; --flower-scale: 0.58; opacity: 0.3; }
+
+.flower-sway-slow { animation: flowerSway 7s ease-in-out infinite; }
+.flower-sway-medium { animation: flowerSway 5.5s ease-in-out 0.6s infinite; }
+.flower-sway-fast { animation: flowerSway 4.5s ease-in-out 1.1s infinite; }
 
 #flower-canvas {
     position: absolute;
@@ -404,6 +496,26 @@ body {
     }
 }
 
+@keyframes flowerSway {
+    0%, 100% { margin-top: 0; rotate: -3deg; }
+    50% { margin-top: -10px; rotate: 4deg; }
+}
+
+@keyframes fallingPetal {
+    0% {
+        opacity: 0;
+        transform: translate3d(0, -8vh, 0) rotate(15deg) scale(var(--scale));
+    }
+    12% { opacity: 0.72; }
+    50% {
+        transform: translate3d(var(--drift), 48vh, 0) rotate(180deg) scale(var(--scale));
+    }
+    100% {
+        opacity: 0;
+        transform: translate3d(calc(var(--drift) * -0.35), 116vh, 0) rotate(340deg) scale(var(--scale));
+    }
+}
+
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
     *,
@@ -417,6 +529,11 @@ body {
 
 /* Mobile adjustments */
 @media (max-width: 640px) {
+    .garden-flower-left { left: -12px; top: 30%; }
+    .garden-flower-right { right: -16px; top: 66%; }
+    .garden-flower-top { right: 4%; top: 12%; }
+    .garden-flower-bottom { left: 2%; bottom: 10%; }
+
     .lyrics-panel {
         top: 16px;
         right: 16px;
