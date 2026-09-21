@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Una experiencia interactiva de flores">
+    <title>Flores para ti</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@300;400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div id="welcome-screen" class="screen active">
+        <div class="welcome-content">
+            <div class="petal petal-1" aria-hidden="true"></div>
+            <div class="petal petal-2" aria-hidden="true"></div>
+            <div class="petal petal-3" aria-hidden="true"></div>
+            <div class="petal petal-4" aria-hidden="true"></div>
+            <h1 class="welcome-title">
+            🌊🌊🌊 ¡Ooolaaa, <strong>Anahí</strong>!<br>
+            Aquí hay flores amarillas.
+            </h1>
+            <p class="welcome-subtitle">con una canción especial</p>
+            <button id="open-btn" class="open-button" aria-label="Abrir experiencia">
+                <span>Abrir</span>
+            </button>
+        </div>
+    </div>
+
+    <div id="experience-screen" class="screen">
+        <canvas id="flower-canvas" aria-label="Composición de flores amarillas"></canvas>
+
+        <div id="audio-controls" class="audio-controls hidden" role="region" aria-label="Control de música">
+            <button id="audio-toggle" class="audio-btn" aria-label="Pausar música">
+                <svg class="icon-pause" viewBox="0 0 24 24" fill="currentColor" width="20" height="20" aria-hidden="true">
+                    <rect x="6" y="4" width="4" height="16" rx="1"/>
+                    <rect x="14" y="4" width="4" height="16" rx="1"/>
+                </svg>
+                <svg class="icon-play hidden" viewBox="0 0 24 24" fill="currentColor" width="20" height="20" aria-hidden="true">
+                    <polygon points="5,3 19,12 5,21"/>
+                </svg>
+            </button>
+            <button id="audio-mute" class="audio-btn" aria-label="Silenciar música">
+                <svg class="icon-unmuted" viewBox="0 0 24 24" fill="currentColor" width="20" height="20" aria-hidden="true">
+                    <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                </svg>
+                <svg class="icon-muted hidden" viewBox="0 0 24 24" fill="currentColor" width="20" height="20" aria-hidden="true">
+                    <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
+                </svg>
+            </button>
+        </div>
+
+        <div id="youtube-btn-container" class="youtube-container hidden">
+            <a id="youtube-link" class="youtube-button" href="https://www.youtube.com/watch?v=vlneT-a-KkQ&list=RDvlneT-a-KkQ&start_radio=1" target="_blank" rel="noopener noreferrer">
+                Escucha
+            </a>
+        </div>
+
+        <aside id="lyrics-panel" class="lyrics-panel hidden" aria-label="Letra de la canción" aria-live="polite">
+            <p class="lyrics-kicker">El Tesoro</p>
+            <p id="lyrics-line" class="lyrics-line">Presiona Abrir para comenzar</p>
+            <p id="lyrics-status" class="lyrics-status">La letra aparecerá con la música</p>
+        </aside>
+    </div>
+
+    <script src="js/sunflowers-data.js"></script>
+    <script src="js/lyrics-data.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
