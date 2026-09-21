@@ -696,6 +696,10 @@
     var windForce = 0;
 
     function buildFlowerGarden() {
+        if (typeof window.buildFlowerGarden === 'function') {
+            flowers = window.buildFlowerGarden(width, height);
+            return;
+        }
         flowers = [];
         var isMobile = width < 640;
         var count = isMobile ? 5 : 6; // 4 to 6 dancing sunflowers
@@ -739,6 +743,13 @@
     }
 
     function plantNewFlower(x, y) {
+        if (typeof window.plantNewFlower === 'function') {
+            var newFl = window.plantNewFlower(x, y, width, height);
+            spawnPetalBurst(x, y, 16);
+            for (var k = 0; k < 8; k++) spawnPollen(x, y);
+            flowers = window.getGardenFlowers();
+            return newFl;
+        }
         var isMobile = width < 640;
         var radius = isMobile ?
             (46 + Math.random() * 14) :
@@ -945,6 +956,14 @@
         audio.volume = 0.7;
         audio.preload = 'auto';
 
+        if (typeof window.AudioManager === 'function') {
+            window.audioManager = new window.AudioManager({
+                audioElement: audio,
+                audioSrc: CONFIG.AUDIO_SRC,
+                jsonSrc: 'data/audio_data.json'
+            });
+        }
+
         audio.addEventListener('play', function () {
             isPlaying = true;
             updateAudioIcons();
@@ -1092,22 +1111,41 @@
         var delta = timestamp - lastTimestamp;
         lastTimestamp = timestamp;
 
-        // 1. Update real-time beat analysis
-        updateBeatAnalysis();
+        // 1. Obtener métricas de audio sincronizadas desde audio_data.json
+        var audioData = { volume: 0, bass: 0, mid: 0, treble: 0 };
+        if (window.audioManager) {
+            audioData = window.audioManager.update();
+        }
 
-        // 2. Smooth decay of external wind force
+        // Respaldo en tiempo real si el JSON aún no está disponible
+        updateBeatAnalysis();
+        if ((!audioData.volume && !audioData.bass) && beatIntensity > 0) {
+            audioData = {
+                volume: beatIntensity * 0.75,
+                bass: beatIntensity,
+                mid: beatIntensity * 0.5,
+                treble: beatIntensity * 0.35
+            };
+        }
+
+        // 2. Decaimiento suave del viento externo
         windForce *= 0.94;
 
-        // 3. Clear canvas
+        // 3. Limpiar canvas
         ctx.clearRect(0, 0, width, height);
 
-        // 4. Update and draw particles (ambient floating petals)
+        // 4. Actualizar y dibujar partículas
         updateParticles(ctx, delta);
 
-        // 5. Update and draw dancing sunflowers
-        for (var i = 0; i < flowers.length; i++) {
-            flowers[i].update(delta, timestamp, windForce);
-            flowers[i].draw(ctx, timestamp);
+        // 5. Actualizar y dibujar flores orgánicas según la música
+        if (typeof window.updateFlowers === 'function' && typeof window.renderFlowers === 'function') {
+            window.updateFlowers(audioData, delta, timestamp, windForce);
+            window.renderFlowers(ctx, timestamp, audioData);
+        } else {
+            for (var i = 0; i < flowers.length; i++) {
+                flowers[i].update(delta, timestamp, windForce);
+                flowers[i].draw(ctx, timestamp);
+            }
         }
 
         animFrameId = requestAnimationFrame(render);
