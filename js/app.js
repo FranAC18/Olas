@@ -183,12 +183,14 @@
         this.petalCount = options.petalCount || (Math.floor(Math.random() * 4) + 20); // 20-24 petals
         this.stemWidth = options.stemWidth || (this.radius > 55 ? 6 : 4.5);
         this.angleOffset = Math.random() * Math.PI * 2;
-        this.naturalCurve = options.naturalCurve || ((Math.random() - 0.5) * 40);
+        this.naturalCurve = options.naturalCurve || 0;
 
-        // Choreography / Dancing wave properties
-        this.dancePhase = options.dancePhase || 0; // Staggered dance wave
-        this.baseSwayAmp = 2.8 + Math.random() * 1.8; // Drastically reduced base sway: only 2.8px to 4.6px!
-        this.rhythmSensitivity = 0.8 + Math.random() * 0.4;
+        // Rhythm Bar / Visualizer properties (Pure vertical up-down motion)
+        this.flowerIndex = options.flowerIndex !== undefined ? options.flowerIndex : 0;
+        this.totalFlowers = options.totalFlowers || 6;
+        this.barLevel = 0; // Smoothed 0.0 to 1.0 vertical rhythm level
+        this.rhythmSensitivity = 0.85 + Math.random() * 0.35;
+        this.dancePhase = options.dancePhase || 0;
 
         // Growth & Bloom entrance animation
         this.growth = 0;
@@ -244,23 +246,47 @@
             this.growth = Math.min(this.targetGrowth, this.growth + this.growthSpeed);
         }
 
-        // DANCING BEHAVIOR OR TACTILE DRAG
+        // TACTILE DRAG OR RHYTHM BAR VERTICAL MOTION
         if (!this.isDragging) {
-            // 1. Gentle, subtle organic breeze (greatly reduced movement: calm & peaceful)
-            var breezeTime = time * 0.0012;
-            var idleBreeze = Math.sin(breezeTime + this.dancePhase) * this.baseSwayAmp;
+            // Equalizer / Rhythm Bar spectrum level calculation
+            var targetLevel = 0;
+            if (analyser && dataArray && isPlaying) {
+                var p = (this.totalFlowers > 1) ? (this.flowerIndex / (this.totalFlowers - 1)) : 0.5;
+                // Distribute frequency spectrum across flowers: bass on left, mids in center, highs on right
+                var startBin = Math.max(1, Math.floor(1 + Math.pow(p, 1.8) * 48));
+                var endBin = Math.min(dataArray.length - 1, Math.floor(startBin + 2 + p * 12));
+                var sum = 0;
+                var count = 0;
+                for (var b = startBin; b <= endBin; b++) {
+                    sum += dataArray[b];
+                    count++;
+                }
+                var bandLevel = count > 0 ? (sum / count) / 255 : 0;
+                // Combine specific frequency level with overall beat impulse
+                targetLevel = Math.min(1.0, bandLevel * 1.35 + beatIntensity * 0.45);
+            } else if (isPlaying) {
+                // Fallback BPM mode (96 BPM): dynamic equalizer wave across the flowers
+                var p = (this.totalFlowers > 1) ? (this.flowerIndex / (this.totalFlowers - 1)) : 0.5;
+                var waveMod = 0.7 + 0.3 * Math.sin(time * 0.0055 + p * Math.PI * 1.6);
+                targetLevel = Math.min(1.0, beatIntensity * waveMod * this.rhythmSensitivity);
+            }
 
-            // 2. Rhythmic reaction to beats, bass and musical accentuations
-            // Alternating tilt wave on the beat
-            var beatDirection = Math.sin(this.dancePhase + (time * 0.0045));
-            var rhythmTilt = beatDirection * (beatIntensity * 6.5 * this.rhythmSensitivity);
+            // Snappy attack on beat hits, smooth organic descent
+            if (targetLevel > this.barLevel) {
+                this.barLevel += (targetLevel - this.barLevel) * 0.42;
+            } else {
+                this.barLevel += (targetLevel - this.barLevel) * 0.16;
+            }
 
-            // Vertical nod / bounce: slight head dip on kick/bass hit, springs back elastically
-            var rhythmBounce = (beatIntensity * 4.2 * this.rhythmSensitivity);
+            // STRICTLY VERTICAL MOTION (De arriba hacia abajo - Como una barra de ritmo)
+            // NO lateral movement: flowers stay straight in their visualizer column
+            var targetX = this.naturalHeadX + windForce * 0.35;
 
-            // Target head position with reduced sway + rhythm accents + swipe wind
-            var targetX = this.naturalHeadX + idleBreeze + rhythmTilt + windForce;
-            var targetY = this.naturalHeadY + rhythmBounce;
+            var isMobile = width < 640;
+            var maxLift = (isMobile ? 38 : 58) * this.rhythmSensitivity;
+            var barLift = this.barLevel * maxLift;
+            // Subtract barLift to elevate UPWARDS on the canvas
+            var targetY = this.naturalHeadY - barLift;
 
             var ax = (targetX - this.x) * this.stiffness;
             var ay = (targetY - this.y) * this.stiffness;
@@ -280,9 +306,9 @@
         var easeGrowth = Math.min(1, Math.sin(g * Math.PI * 0.5));
         var currentRadius = this.radius * easeGrowth;
 
-        // RHYTHMIC BOUNCE / VERTICAL SCALE PULSE (subtle 3.5% pulse on beat hits)
+        // RHYTHMIC BOUNCE / VERTICAL SCALE PULSE (subtle pulse on rhythm bar elevation)
         if (isPlaying) {
-            currentRadius *= (1.0 + beatIntensity * 0.035);
+            currentRadius *= (1.0 + (this.barLevel || beatIntensity) * 0.038);
         }
 
         var bx = this.baseX;
@@ -705,7 +731,9 @@
                 radius: radius,
                 bloomDelay: bloomDelay,
                 dancePhase: dancePhase,
-                naturalCurve: (norm - 0.5) * 35
+                flowerIndex: i,
+                totalFlowers: count,
+                naturalCurve: (norm - 0.5) * 14
             }));
         }
     }
@@ -717,14 +745,16 @@
             (58 + Math.random() * 18);
 
         var newFlower = new Flower({
-            baseX: x + (Math.random() - 0.5) * 50,
+            baseX: x + (Math.random() - 0.5) * 35,
             baseY: height + 15,
             headX: x,
             headY: y,
             radius: radius,
             bloomDelay: 0,
             dancePhase: flowers.length * 1.15,
-            naturalCurve: (Math.random() - 0.5) * 30
+            flowerIndex: flowers.length,
+            totalFlowers: Math.max(flowers.length + 1, 6),
+            naturalCurve: (Math.random() - 0.5) * 12
         });
 
         spawnPetalBurst(x, y, 16);
